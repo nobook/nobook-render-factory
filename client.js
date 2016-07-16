@@ -1,5 +1,8 @@
 var WebSocketClinet = require('websocket').client;
 var Buffer = require('buffer').Buffer;
+var os = require('os');
+var fileLister = require('file-lister');
+
 var wsClient = new WebSocketClinet({
 	//最大不超过80M
 	maxReceivedMessageSize:0x8000000
@@ -15,48 +18,52 @@ const decompressUnzip = require('decompress-unzip');
  
 
 const PROTOCOL_RENDER_CONN = require('./const').PROTOCOL_RENDER_CONN;
-//渲染程序路径
-var renderPath = '/Applications/Autodesk/maya2016/Maya.app/Contents/bin/Render';
+//渲染程序路径/Applications/Autodesk/maya2016/Maya.app/Contents/bin/Render
+var renderPath = 'Render';
 
 wsClient.on('connect', function(conn) {
 	console.log("connect");
 	conn.on('message', function(message) {
 		if (message.type == 'utf8') { 
 			var data = JSON.parse(message.utf8Data);
+			//渲染输出的目录
+			var outputFolder = os.tmpDir() + '/render-output/';
 			if (data.render != undefined) {
 				var frame = data.render.frame;
-				var execStr = renderPath + ' -s ' + frame + ' -e ' + frame + ' -rd ./render-output ./temp_render/model.mb';
+				var execStr = renderPath + ' -s ' + frame + ' -e ' + frame + ' -rd ' + outputFolder + ' ./temp_render/model.mb';
 				console.log('render Data:', data.render);
 				console.log('exec command', execStr);
-				//开始渲染
-				childProcess.exec(execStr, (error, stdout, stderr) => {
-					//console.log('error:', error, "=======");
-					//console.log('stdout:', stdout, "=======");
-					stderr = stderr.toString();
-					var reg = /Finished Rendering (.*).$/mgi;
-					while (true) {
-						var result = reg.exec(stderr);
-						//如果有那么把文件回传给服务器
-						console.log(result);
-						if (result == null) {
-							break;
+				//删除临时渲染文件目录
+				rmdir(outputFolder, () => {
+					//开始渲染
+					childProcess.exec(execStr, (error, stdout, stderr) => {
+						var platform = require('os').platform();
+						var infoStr;
+						if (platform === 'win32') {
+							infoStr = stdout.toString();
 						} else {
-							var filePath = result[1];
-							var fileBuffer = fs.readFileSync(filePath);
-							var path = 'render-output/';
-							var index = filePath.indexOf(path);
-							//获取给服务器保存的文件名
-							var writeFileName = filePath.substr(index + path.length);
-							//前4个字节为读出文件的长度
-							var buffer = new Buffer(4 + writeFileName.length + fileBuffer.length);
-							buffer.writeInt32BE(writeFileName.length);
-							buffer.write(writeFileName, 4, 'ascii');
-							fileBuffer.copy(buffer, 4 + writeFileName.length, 0, fileBuffer.length);
-							conn.sendBytes(buffer);
-							console.log("send binary data ", filePath);
-							requestRenderFrame();
+							infoStr = stderr.toString();
 						}
-					}
+						var reg = /Finished Rendering (.*).$/mgi;
+						//回传数据
+						fileLister([outputFolder], (error, files) => {
+							for (var filePath of files) {
+								var fileBuffer = fs.readFileSync(filePath);
+								var path = 'render-output';
+								var index = filePath.indexOf(path);
+								//获取给服务器保存的文件名
+								var writeFileName = filePath.substr(index + path.length + 1);
+								//前4个字节为读出文件的长度
+								var buffer = new Buffer(4 + writeFileName.length + fileBuffer.length);
+								buffer.writeInt32BE(writeFileName.length);
+								buffer.write(writeFileName, 4, 'ascii');
+								fileBuffer.copy(buffer, 4 + writeFileName.length, 0, fileBuffer.length);
+								conn.sendBytes(buffer);
+								console.log("send binary data ", filePath);
+							}
+							requestRenderFrame();
+						});
+					});
 
 				});
 			}
@@ -87,28 +94,12 @@ wsClient.on('connect', function(conn) {
 	//请求渲染帧
 	function requestRenderFrame() {
 		conn.sendUTF('requestRenderFrame');
-
-/*
-		var filePath = "/Users/onlyjyf/Documents/maya/projects/default/render-output/XZ_shiti/XZ_shiti16.tga";
-				var fileBuffer = fs.readFileSync(filePath);
-				var path = 'render-output/';
-				var index = filePath.indexOf(path);
-				//获取给服务器保存的文件名
-				var writeFileName = filePath.substr(index + path.length);
-				//前4个字节为读出文件的长度
-				var buffer = new Buffer(4 + writeFileName.length + fileBuffer.length);
-				buffer.writeInt32BE(writeFileName.length);
-				buffer.write(writeFileName, 4, 'ascii');
-				fileBuffer.copy(buffer, 4 + writeFileName.length, 0, fileBuffer.length);
-				console.log(fileBuffer);
-				conn.sendBytes(buffer);
-				*/
 	}
 });
 
 wsClient.on('connectFailed', function(error) {
 	console.log("connect failed, reconnect again");
-	setTimeout(connectToServer, 1000);
+	setTimeout(connectToServer, 5000);
 });
 
 /**

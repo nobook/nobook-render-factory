@@ -1,18 +1,28 @@
 {
-  "name": "render-factory",
-  "version": "1.0.0",
+  "name": "nobook-render-factory",
+  "version": "1.0.11",
   "description": "",
   "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nobook/nobook-render-factory.git"
   },
-  "author": "",
-  "license": "ISC",
+  "keywords": [
+    "render factory"
+  ],
+  "author": "Barton Jin",
+  "license": "MIT",
   "dependencies": {
     "decompress": "^4.0.0",
     "decompress-unzip": "^4.0.1",
+    "file-lister": "^1.1.0",
     "load-json": "0.0.1",
     "mkdir-p": "0.0.7",
     "rmdir": "^1.2.0"
+  },
+  "bin":{
+    "render-client":"./client.js",
+    "render-server":"./index.js"
   }
 }

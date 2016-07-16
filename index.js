@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 var fs = require('fs');
 var websocket = require('websocket');
 var http = require('http');
@@ -21,14 +22,10 @@ for (var i = 2; i < argv.length; i ++) {
 			conf.e = argv[++i];
 			break;
 		}
+		//渲染文件
 		case '-i' :
 		{
 			conf.i = argv[++i];
-			break;
-		}
-		case '-o' :
-		{
-			conf.o = argv[++i];
 			break;
 		}
 	}
@@ -49,16 +46,13 @@ if (conf.i === undefined) {
 	return;
 }
 
-if (conf.o === undefined) {
-	console.log("请输入输出目录 如：-o output_folder")
-	return;
-}
-
 //根据开始和结束帧，生成渲染帧数组
 var renderAry = [];
 for (var i = conf.s; i <= conf.e; i ++) {
 	renderAry.push(i);
 }
+//翻转数组
+renderAry.reverse();
 
 //正在被渲染的帧
 var renderingAry = [];
@@ -96,6 +90,8 @@ wsServer.on('request', function(request) {
 					case 'requestRenderFrame':
 					{
 						var data = requestRenderFrame();
+						//设置当前渲染的数据
+						connection.currentRenderData = data;
 						console.log(data);
 						connection.sendUTF(JSON.stringify(data));
 						break;
@@ -114,6 +110,7 @@ wsServer.on('request', function(request) {
 				//需要保存的文件buffer
 				var fileBuffer = buffer.slice(position, buffer.length);
 				var outputFile = 'receive-render/' + fileName;
+				outputFile = outputFile.replace(/\\/gi, '/');
 				var outputFolder = outputFile.substr(0, outputFile.lastIndexOf('/'));	
 				console.log(outputFolder)
 				mkdir.sync(outputFolder);
@@ -127,6 +124,7 @@ wsServer.on('request', function(request) {
 			if (index != -1) {
 				connAry.splice(index, 1);
 			}
+			renderAry.push(connection.currentRenderData.render.frame);
 			console.log("remove connection " + this);
 		});
 
