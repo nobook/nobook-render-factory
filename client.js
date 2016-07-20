@@ -4,8 +4,8 @@ var os = require('os');
 var fileLister = require('file-lister');
 
 var wsClient = new WebSocketClinet({
-	//最大不超过80M
-	maxReceivedMessageSize:0x8000000
+	//最大不超过800M
+	maxReceivedMessageSize:0x80000000
 
 });
 var getJson = require('load-json');
