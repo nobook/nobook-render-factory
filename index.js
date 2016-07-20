@@ -28,17 +28,25 @@ for (var i = 2; i < argv.length; i ++) {
 			conf.i = argv[++i];
 			break;
 		}
+		//frames, 可以渲染不连续的帧
+		case '-fs' :
+		{
+			conf.fs = argv[++i];
+			break;
+		}
 	}
 }
 
-if (conf.e === undefined) {
-	console.log("请输入开始帧 如：-e 0")
-	return;
-}
+if (conf.fs === undefined) {
+	if (conf.e === undefined) {
+		console.log("请输入开始帧 如：-e 0")
+		return;
+	}
 
-if (conf.s === undefined) {
-	console.log("请输入结束帧 如：-s 100")
-	return;
+	if (conf.s === undefined) {
+		console.log("请输入结束帧 如：-s 100")
+		return;
+	}
 }
 
 if (conf.i === undefined) {
@@ -48,8 +56,12 @@ if (conf.i === undefined) {
 
 //根据开始和结束帧，生成渲染帧数组
 var renderAry = [];
-for (var i = conf.s; i <= conf.e; i ++) {
-	renderAry.push(i);
+if (conf.fs) {
+	renderAry = conf.fs.split(',');
+} else {
+	for (var i = conf.s; i <= conf.e; i ++) {
+		renderAry.push(i);
+	}
 }
 //翻转数组
 renderAry.reverse();
