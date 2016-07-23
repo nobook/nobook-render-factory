@@ -34,6 +34,12 @@ for (var i = 2; i < argv.length; i ++) {
 			conf.fs = argv[++i];
 			break;
 		}
+		//p, 端口号
+		case '-p' :
+		{
+			conf.p = argv[++i];
+			break;
+		}
 	}
 }
 
@@ -80,7 +86,7 @@ var server = http.createServer(function(request, response) {
 	console.log(request, response);
 });
 
-server.listen(9989, function() {
+server.listen(conf.p || 9989, function() {
 	console.log("server is start!");
 });
 

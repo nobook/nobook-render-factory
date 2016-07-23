@@ -2,12 +2,36 @@ var WebSocketClinet = require('websocket').client;
 var Buffer = require('buffer').Buffer;
 var os = require('os');
 var fileLister = require('file-lister');
+var argv = process.argv;
 
 var wsClient = new WebSocketClinet({
-	//最大不超过800M
-	maxReceivedMessageSize:0x80000000
-
+	//最大不超过900M
+	maxReceivedMessageSize:0x90000000
 });
+console.log("V 1.1.0");
+var conf = {p:9989};
+for (var i = 2; i < argv.length; i ++) {
+	var arg = argv[i];
+	switch (arg) {
+		//ip
+		case '-ip' :
+		{
+			conf.ip = argv[++i];
+			break;
+		}
+		//端口
+		case '-p' : 
+		{
+			conf.p = argv[++i];
+			break;
+		}
+	}
+}
+if (conf.ip) {
+	console.log("server ip is " + conf.ip);
+}
+console.log("server port is " + conf.p);
+
 var getJson = require('load-json');
 var childProcess = require('child_process');
 var fs = require('fs');
@@ -107,9 +131,14 @@ wsClient.on('connectFailed', function(error) {
  */
 function connectToServer() {
 	//加载服务器上的 render.json 判断局域网服务器的ip
-	getJson('http://shengwu.nobook.com.cn/render.json', {}, function(e, response) {
-		wsClient.connect('ws://' + response.server + ':9989', PROTOCOL_RENDER_CONN);
-	});
+	console.log(conf.ip);
+	if (conf.ip) {
+		wsClient.connect('ws://' + conf.ip + ':' + conf.p, PROTOCOL_RENDER_CONN);
+	} else {
+		getJson('http://shengwu.nobook.com.cn/render.json', {}, function(e, response) {
+			wsClient.connect('ws://' + response.server + ':' + conf.p, PROTOCOL_RENDER_CONN);
+		});
+	}
 }
 
 connectToServer();
