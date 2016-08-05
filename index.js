@@ -13,13 +13,13 @@ for (var i = 2; i < argv.length; i ++) {
 		//开始帧
 		case '-s' :
 		{
-			conf.s = argv[++i];
+			conf.s = parseInt(argv[++i]);
 			break;
 		}
 		//结束帧
 		case '-e' : 
 		{
-			conf.e = argv[++i];
+			conf.e = parseInt(argv[++i]);
 			break;
 		}
 		//渲染文件
@@ -92,7 +92,8 @@ server.listen(conf.p || 9989, function() {
 
 var wsServer = new WebSocketServer({
 	httpServer:server,
-	maxReceivedMessageSize:0x8000000
+	maxReceivedMessageSize:0x8000000,
+	dropConnectionOnKeepaliveTimeout:false
 });
 
 wsServer.on('request', function(request) {
@@ -142,7 +143,9 @@ wsServer.on('request', function(request) {
 			if (index != -1) {
 				connAry.splice(index, 1);
 			}
-			renderAry.push(connection.currentRenderData.render.frame);
+			if (connection.currentRenderData) {
+				renderAry.push(connection.currentRenderData.render.frame);
+			}
 			console.log("remove connection " + this);
 		});
 

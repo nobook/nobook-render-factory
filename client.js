@@ -8,7 +8,7 @@ var wsClient = new WebSocketClinet({
 	//最大不超过900M
 	maxReceivedMessageSize:0x90000000
 });
-console.log("V 1.1.0");
+console.log("V 1.2.1");
 var conf = {p:9989};
 for (var i = 2; i < argv.length; i ++) {
 	var arg = argv[i];
