@@ -4,6 +4,9 @@ var os = require('os');
 var fileLister = require('file-lister');
 var argv = process.argv;
 
+var child_process = require('child_process')
+var exec = child_process.execSync;
+
 var wsClient = new WebSocketClinet({
 	//最大不超过900M
 	maxReceivedMessageSize:0x90000000
@@ -96,16 +99,13 @@ wsClient.on('connect', function(conn) {
 			fs.writeFileSync('receive.zip', message.binaryData);
 			//删除临时目录
 			rmdir('temp_render', function() {
+
+				console.log('=====================================')
 				//解压接收的文件
-				decompress('receive.zip', 'temp_render', {
-					plugins: [
-						decompressUnzip()
-					]
-				}).then(() => {
-					console.log('解压完成');
-					//请求渲染帧
-					requestRenderFrame();
-				});
+				exec('node C:\\Users\\t\\AppData\\Roaming\\npm\\node_modules\\nobook-render-factory\\exec.js');
+				console.log('+++++++++++++++++++++++++++++++++')
+
+				
 			});
 		}
 	});
@@ -142,3 +142,5 @@ function connectToServer() {
 }
 
 connectToServer();
+
+
