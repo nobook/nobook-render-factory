@@ -3,10 +3,10 @@ var fs = require('fs');
 var websocket = require('websocket');
 var http = require('http');
 var mkdir = require('mkdir-p');
-//渲染配置
+// 渲染配置
 var conf = {};
 var argv = process.argv;
-//读取渲染参数
+// 读取渲染参数
 for (var i = 2; i < argv.length; i ++) {
 	var arg = argv[i];
 	switch (arg) {
